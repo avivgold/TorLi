@@ -1,26 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Check, Search } from "lucide-react";
-import { Badge } from "./ui/badge";
+import React, { useState, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
-interface ServiceOption {
+export interface ServiceOption {
   id: string;
   name: string;
   icon: string;
   description: string;
 }
 
-interface BranchOption {
+export interface BranchOption {
   id: string;
   name: string;
   address: string;
@@ -38,178 +30,196 @@ const ServiceSelector = ({
   onBranchesSelected = () => {},
   onNext = () => {},
 }: ServiceSelectorProps) => {
-  const [selectedService, setSelectedService] = useState<ServiceOption | null>(
-    null,
-  );
-  const [selectedBranches, setSelectedBranches] = useState<BranchOption[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedService, setSelectedService] = useState<string>("");
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
 
   // Mock data for services
-  const services: ServiceOption[] = [
+  const services = [
     {
       id: "passport",
-      name: "Passport & ID",
+      name: "דרכון",
       icon: "🛂",
-      description: "Passport renewals and ID card services",
+      description: "חידוש דרכון ותעודת זהות",
     },
     {
-      id: "drivers-license",
-      name: "Driver's License",
+      id: "license",
+      name: "רישיון נהיגה",
       icon: "🚗",
-      description: "License renewals and driving tests",
+      description: "חידוש רישיון נהיגה ומבחני נהיגה",
     },
     {
-      id: "national-insurance",
-      name: "National Insurance",
+      id: "bituach",
+      name: "ביטוח לאומי",
       icon: "🏥",
-      description: "Bituach Leumi services and claims",
+      description: "שירותי ביטוח לאומי ותביעות",
     },
     {
-      id: "tax-authority",
-      name: "Tax Authority",
+      id: "tax",
+      name: "רשות המסים",
       icon: "📊",
-      description: "Tax filing and consultations",
+      description: "הגשת מסים וייעוץ",
     },
   ];
 
   // Mock data for branches
-  const branches: BranchOption[] = [
-    {
-      id: "tlv-1",
-      name: "Tel Aviv Central",
-      address: "123 Dizengoff St, Tel Aviv",
-      region: "Tel Aviv",
-    },
-    {
-      id: "tlv-2",
-      name: "Tel Aviv South",
-      address: "45 Allenby St, Tel Aviv",
-      region: "Tel Aviv",
-    },
-    {
-      id: "jlm-1",
-      name: "Jerusalem Central",
-      address: "78 Jaffa St, Jerusalem",
-      region: "Jerusalem",
-    },
-    {
-      id: "jlm-2",
-      name: "Jerusalem East",
-      address: "23 Salah ad-Din St, Jerusalem",
-      region: "Jerusalem",
-    },
-    {
-      id: "hfa-1",
-      name: "Haifa Main",
-      address: "90 Ben Gurion Blvd, Haifa",
-      region: "Haifa",
-    },
-    {
-      id: "bsh-1",
-      name: "Beer Sheva Central",
-      address: "56 Herzl St, Beer Sheva",
-      region: "South",
-    },
-    {
-      id: "nth-1",
-      name: "Tiberias Office",
-      address: "12 Galilee St, Tiberias",
-      region: "North",
-    },
-  ];
+  const branches = {
+    passport: [
+      {
+        id: "tlv",
+        name: "תל אביב - מרכז",
+        address: "דיזנגוף 123, תל אביב",
+        region: "מרכז",
+      },
+      {
+        id: "jlm",
+        name: "ירושלים",
+        address: "יפו 78, ירושלים",
+        region: "ירושלים",
+      },
+      {
+        id: "hfa",
+        name: "חיפה",
+        address: "שדרות בן גוריון 90, חיפה",
+        region: "צפון",
+      },
+      {
+        id: "bsh",
+        name: "באר שבע",
+        address: "הרצל 56, באר שבע",
+        region: "דרום",
+      },
+    ],
+    license: [
+      {
+        id: "tlv",
+        name: "תל אביב",
+        address: "דרך פתח תקווה 45, תל אביב",
+        region: "מרכז",
+      },
+      {
+        id: "jlm",
+        name: "ירושלים",
+        address: "יפו 120, ירושלים",
+        region: "ירושלים",
+      },
+      { id: "hfa", name: "חיפה", address: "העצמאות 80, חיפה", region: "צפון" },
+    ],
+    bituach: [
+      {
+        id: "tlv",
+        name: "תל אביב",
+        address: "אלנבי 45, תל אביב",
+        region: "מרכז",
+      },
+      {
+        id: "jlm",
+        name: "ירושלים",
+        address: "יפו 30, ירושלים",
+        region: "ירושלים",
+      },
+      { id: "hfa", name: "חיפה", address: "הנביאים 22, חיפה", region: "צפון" },
+    ],
+    tax: [
+      {
+        id: "tlv",
+        name: "תל אביב",
+        address: "דרך מנחם בגין 125, תל אביב",
+        region: "מרכז",
+      },
+      {
+        id: "jlm",
+        name: "ירושלים",
+        address: "כנפי נשרים 5, ירושלים",
+        region: "ירושלים",
+      },
+      { id: "hfa", name: "חיפה", address: "פל-ים 15, חיפה", region: "צפון" },
+    ],
+  };
 
-  const filteredBranches = branches.filter(
-    (branch) =>
-      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.region.toLowerCase().includes(searchQuery.toLowerCase()),
+  const handleServiceChange = useCallback(
+    (value: string) => {
+      setSelectedService(value);
+      setSelectedBranches([]);
+
+      const serviceObj = services.find((s) => s.id === value);
+      if (serviceObj) {
+        onServiceSelected(serviceObj as ServiceOption);
+      }
+    },
+    [onServiceSelected],
   );
 
-  const handleServiceSelect = (service: ServiceOption) => {
-    setSelectedService(service);
-    onServiceSelected(service);
-  };
+  const handleBranchToggle = useCallback(
+    (branchId: string) => {
+      setSelectedBranches((prev) => {
+        let updatedBranches;
+        if (prev.includes(branchId)) {
+          updatedBranches = prev.filter((id) => id !== branchId);
+        } else {
+          updatedBranches = [...prev, branchId];
+        }
 
-  const handleBranchToggle = (branch: BranchOption) => {
-    if (selectedBranches.some((b) => b.id === branch.id)) {
-      const updatedBranches = selectedBranches.filter(
-        (b) => b.id !== branch.id,
-      );
-      setSelectedBranches(updatedBranches);
-      onBranchesSelected(updatedBranches);
-    } else {
-      const updatedBranches = [...selectedBranches, branch];
-      setSelectedBranches(updatedBranches);
-      onBranchesSelected(updatedBranches);
-    }
-  };
+        if (
+          selectedService &&
+          branches[selectedService as keyof typeof branches]
+        ) {
+          const selectedBranchObjects = branches[
+            selectedService as keyof typeof branches
+          ].filter((branch) =>
+            updatedBranches.includes(branch.id),
+          ) as BranchOption[];
 
-  const handleNext = () => {
+          onBranchesSelected(selectedBranchObjects);
+        }
+
+        return updatedBranches;
+      });
+    },
+    [selectedService, onBranchesSelected],
+  );
+
+  const handleNextClick = useCallback(() => {
     if (selectedService && selectedBranches.length > 0) {
       onNext();
     }
-  };
+  }, [selectedService, selectedBranches, onNext]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-background p-4 rounded-lg">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Select a Service</h2>
-        <p className="text-muted-foreground mb-4">
-          Choose the government service you need an appointment for
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6 bg-white p-4 rounded-lg">
+      <div>
+        <h3 className="text-lg font-medium mb-3">בחר שירות</h3>
+        <div className="grid grid-cols-2 gap-3">
           {services.map((service) => (
             <Card
               key={service.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${selectedService?.id === service.id ? "border-primary ring-2 ring-primary/20" : ""}`}
-              onClick={() => handleServiceSelect(service)}
+              className={`cursor-pointer transition-all hover:shadow-md ${selectedService === service.id ? "border-primary ring-2 ring-primary/20" : ""}`}
+              onClick={() => handleServiceChange(service.id)}
             >
               <CardContent className="flex items-center p-4">
-                <div className="text-4xl mr-4">{service.icon}</div>
+                <div className="text-4xl ml-4">{service.icon}</div>
                 <div>
                   <h3 className="font-medium">{service.name}</h3>
                   <p className="text-sm text-muted-foreground">
                     {service.description}
                   </p>
                 </div>
-                {selectedService?.id === service.id && (
-                  <Check className="ml-auto text-primary" size={20} />
-                )}
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
 
-      {selectedService && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-2">Select Branch Locations</h2>
-          <p className="text-muted-foreground mb-4">
-            Choose one or more branch locations you prefer
-          </p>
-
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by city, region or address..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="border rounded-md divide-y">
-            {filteredBranches.length > 0 ? (
-              filteredBranches.map((branch) => {
-                const isSelected = selectedBranches.some(
-                  (b) => b.id === branch.id,
-                );
-                return (
+      {selectedService &&
+        branches[selectedService as keyof typeof branches] && (
+          <div>
+            <h3 className="text-lg font-medium mb-3">בחר סניפים</h3>
+            <div className="space-y-2">
+              {branches[selectedService as keyof typeof branches].map(
+                (branch) => (
                   <div
                     key={branch.id}
-                    className={`flex items-center justify-between p-3 cursor-pointer hover:bg-muted ${isSelected ? "bg-primary/5" : ""}`}
-                    onClick={() => handleBranchToggle(branch)}
+                    className={`flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-muted ${selectedBranches.includes(branch.id) ? "bg-primary/5 border-primary" : ""}`}
+                    onClick={() => handleBranchToggle(branch.id)}
                   >
                     <div>
                       <div className="font-medium">{branch.name}</div>
@@ -217,34 +227,19 @@ const ServiceSelector = ({
                         {branch.address}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{branch.region}</Badge>
-                      {isSelected && (
-                        <Check className="text-primary" size={18} />
-                      )}
+                    <div className="text-sm bg-muted px-2 py-1 rounded">
+                      {branch.region}
                     </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="p-4 text-center text-muted-foreground">
-                No branches found matching your search
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">
-              {selectedBranches.length} branch
-              {selectedBranches.length !== 1 ? "es" : ""} selected
+                ),
+              )}
             </div>
-            <Button
-              onClick={handleNext}
-              disabled={selectedBranches.length === 0}
-            >
-              Continue
-            </Button>
           </div>
+        )}
+
+      {selectedService && selectedBranches.length > 0 && (
+        <div className="flex justify-end">
+          <Button onClick={handleNextClick}>המשך</Button>
         </div>
       )}
     </div>

@@ -13,26 +13,60 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { registerWithEmail, loginWithGoogle } from "@/lib/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Register with:", { name, email, password });
-    // Here you would integrate with Firebase Auth or Auth0
-    router.push("/onboarding");
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (password.length < 6) {
+        setError("הסיסמה חייבת להכיל לפחות 6 תווים");
+        setLoading(false);
+        return;
+      }
+
+      const result = await registerWithEmail(email, password, name);
+      if (result.success) {
+        router.push("/onboarding");
+      } else {
+        setError(result.error);
+      }
+    } catch (err: any) {
+      setError(err.message || "התרחשה שגיאה בהרשמה");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleRegister = () => {
-    console.log("Register with Google");
-    // Here you would integrate with Google OAuth
-    router.push("/onboarding");
+  const handleGoogleRegister = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await loginWithGoogle();
+      if (result.success) {
+        router.push("/onboarding");
+      } else {
+        setError(result.error);
+      }
+    } catch (err: any) {
+      setError(err.message || "התרחשה שגיאה בהרשמה עם Google");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,6 +83,7 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full"
             onClick={handleGoogleRegister}
+            disabled={loading}
           >
             <svg
               className="ml-2 h-4 w-4"
@@ -121,8 +156,14 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full">
-              הרשם
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "נרשם..." : "הרשם"}
             </Button>
           </form>
         </CardContent>

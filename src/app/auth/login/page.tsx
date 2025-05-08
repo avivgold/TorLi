@@ -13,25 +13,55 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { loginWithEmail, loginWithGoogle } from "@/lib/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login with:", { email, password });
-    // Here you would integrate with Firebase Auth or Auth0
-    router.push("/dashboard");
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await loginWithEmail(email, password);
+      if (result.success) {
+        // Check if user has completed onboarding
+        router.push("/dashboard");
+      } else {
+        setError(result.error);
+      }
+    } catch (err: any) {
+      setError(err.message || "התרחשה שגיאה בהתחברות");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Login with Google");
-    // Here you would integrate with Google OAuth
-    router.push("/dashboard");
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await loginWithGoogle();
+      if (result.success) {
+        // Check if user has completed onboarding
+        router.push("/dashboard");
+      } else {
+        setError(result.error);
+      }
+    } catch (err: any) {
+      setError(err.message || "התרחשה שגיאה בהתחברות עם Google");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,6 +76,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={handleGoogleLogin}
+            disabled={loading}
           >
             <svg
               className="ml-2 h-4 w-4"
@@ -112,8 +143,14 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full">
-              התחבר
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "מתחבר..." : "התחבר"}
             </Button>
           </form>
         </CardContent>
