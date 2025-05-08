@@ -9,31 +9,7 @@ import {
   CreditCard,
   CheckCircle,
 } from "lucide-react";
-
-// Create a placeholder OnboardingFlow component since the actual one seems to have issues
-const OnboardingFlow = () => {
-  return (
-    <div className="p-6 bg-background">
-      <h2 className="text-2xl font-bold mb-4">התחל עם תור לי</h2>
-      <p className="text-muted-foreground mb-6">
-        מלא את הטופס הקצר כדי להתחיל לחפש תורים ממשלתיים.
-      </p>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            אימייל או טלפון
-          </label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded-md"
-            placeholder="הכנס את האימייל או מספר הטלפון שלך"
-          />
-        </div>
-        <Button className="w-full">המשך</Button>
-      </div>
-    </div>
-  );
-};
+import SimpleOnboardingFlow from "@/components/SimpleOnboardingFlow";
 
 export default function Home() {
   return (
@@ -56,7 +32,7 @@ export default function Home() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
-              <OnboardingFlow />
+              <SimpleOnboardingFlow />
             </DialogContent>
           </Dialog>
         </div>
@@ -142,7 +118,7 @@ export default function Home() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[600px]">
-                <OnboardingFlow />
+                <SimpleOnboardingFlow />
               </DialogContent>
             </Dialog>
           </div>
